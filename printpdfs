@@ -28,7 +28,7 @@ if ARGV.grep("--help").length > 0 then
 	
 	puts_wrapped "#{Name} is a simple command line script for " <<
 		"printing PDF files in duplex mode as a single print " <<
-		"job, with each PDF file starting on its own page."
+		"job, with each PDF file starting on a new sheet of paper."
 	puts ''
 	puts_wrapped 'Use the -p option to specify the name of a printer to send the print job to. ' <<
 		"It is not necessary to type out the name of the printer in full."

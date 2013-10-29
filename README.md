@@ -44,7 +44,7 @@ In order to use this tool, simply put the files on your path.
 
 	printpdfs is a simple command line script for printing PDF 
 	files in duplex mode as a single print job, with each PDF 
-	file starting on its own page. 
+	file starting on a new sheet of paper. 
 
 	Use the -p option to specify the name of a printer to send 
 	the print job to. It is not necessary to type out the name 
