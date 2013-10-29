@@ -3,7 +3,7 @@
 require 'open3.rb'
 require 'tempfile'
 PdfTK = `which pdftk`.chomp #'pdftk'
-if PdfTK == '' then puts 'Prerequisite pdftk missing'; exit end
+if PdfTK == '' then puts 'Dependency pdftk not satisfied'; exit; end
 #PdfInfo = `which pdfinfo`.chomp #'pdfinfo'
 #if PdfTK == '' then puts 'Prerequisite pdfinfo missing'; exit end
 Name = File.basename(__FILE__)
@@ -226,9 +226,9 @@ output = ARGV.last.dup
 output << '.pdf' unless output.end_with?('.pdf')
 puts "Output file: #{output}"
 if File.exists?(output) then
-	print "File #{output} already exists; do you want to override it? (Y/n) "
-	answer = STDIN.gets.chomp
 	begin
+		print "File #{output} already exists; do you want to override it? (Y/n) "
+		answer = STDIN.gets.chomp.downcase
 		if answer == 'y' || answer == '' then
 			File.delete output
 		elsif answer == 'n' then

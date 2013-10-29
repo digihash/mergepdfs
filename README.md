@@ -8,14 +8,17 @@ The code for generating a blank PDF is based on [a post by Dingo on stackoverflo
 ## Dependencies
 Ruby 1.8.7 or newer, `pdftk`. Installing `pdfinfo` speeds up the merging process.
 
+This program should run on all UNIX systems. Tested on Ubuntu 12.04, Ubuntu 13.04 and OS X Mountain Lion.
+
 ## Installation
 In order to use this tool, simply put the files on your path.
 
 	sudo su
 	cd /opt
 	git clone https://github.com/jmerlevede/mergepdfs.git
-	ln -s /opt/mergepdfs /usr/local/bin/mergepdfs
-	ln -s /opt/printpdfs /usr/local/bin/printpdfs
+	ln -s /opt/mergepdfs/mergepdfs /usr/local/bin/mergepdfs
+	ln -s /opt/mergepdfs/printpdfs /usr/local/bin/printpdfs
+
 
 ## mergepdfs
 `mergepdfs --help`

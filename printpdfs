@@ -3,8 +3,10 @@ require 'tempfile'
 require 'open3'
 Name = File.basename(__FILE__)
 Version = "1.0"
-MergePdfs = 'mergepdfs'
+MergePdfs = `which mergepdfs`.chomp
+if MergePdfs.empty? then puts 'Dependency mergepdfs not satisfied'; exit; end
 WrapLimit = [`tput cols`.to_i,60].min
+
 
 def puts_wrapped(text)
 	words = text.split(/\s+/) # split on any whitespace character
@@ -23,6 +25,7 @@ end
 def execute(*arguments) # see mergepdfs
 	Open3.popen3(*arguments) {|i,o,e|
 		out = o.read.chomp
+		throw :merge_error unless e.read.chomp.empty?
 		return out;	
 	}
 	throw :moo
@@ -85,11 +88,11 @@ tp = t.path; t.close; t.unlink
 args << tp
 puts "args: #{args}"
 execute('mergepdfs',*args)
-begin
+#begin
 	system "lp#{pstring} #{tp}"
-ensure
+#ensure
 	File.delete tp
-end
+#end
 #ensure
 	#puts tempfile.path
 	#tempfile.unlink
