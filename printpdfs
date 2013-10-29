@@ -2,7 +2,7 @@
 require 'tempfile'
 require 'open3'
 Name = File.basename(__FILE__)
-Version = "1.0"
+Version = "1.1"
 MergePdfs = `which mergepdfs`.chomp
 if MergePdfs.empty? then puts 'Dependency mergepdfs not satisfied'; exit; end
 WrapLimit = [`tput cols`.to_i,60].min

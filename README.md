@@ -23,7 +23,7 @@ In order to use this tool, simply put the files on your path.
 ## mergepdfs
 `mergepdfs --help`
 
-	mergepdfs 1.0 by Jonathan Merlevede
+	mergepdfs 1.1 by Jonathan Merlevede
 	Usage:	mergepdfs output[.pdf]
 		mergepdfs input1[.pdf] input2[.pdf] ... output[.pdf]
 
@@ -41,7 +41,7 @@ In order to use this tool, simply put the files on your path.
 ## printpdfs
 `printpdfs --help`
 
-	printpdfs 1.0 by Jonathan Merlevede
+	printpdfs 1.1 by Jonathan Merlevede
 	Usage:	printpdfs -p printer input1[.pdf] input2[.pdf] ... 
 		printpdfs input1[.pdf] input2[.pdf] ... 
 		printpdfs

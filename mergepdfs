@@ -7,7 +7,7 @@ if PdfTK == '' then puts 'Dependency pdftk not satisfied'; exit; end
 #PdfInfo = `which pdfinfo`.chomp #'pdfinfo'
 #if PdfTK == '' then puts 'Prerequisite pdfinfo missing'; exit end
 Name = File.basename(__FILE__)
-Version = '1.0'
+Version = '1.1'
 WrapLimit = [`tput cols`.to_i,60].min
 
 def merge(inputpdfs, outputpdf)
