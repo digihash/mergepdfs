@@ -13,8 +13,8 @@ In order to use this tool, simply put the files on your path.
 	sudo su
 	cd /opt
 	git clone https://github.com/jmerlevede/mergepdfs.git
-	ln -s /opt/mergepdfs /usr/bin/local/mergepdfs
-	ln -s /opt/printpdfs /usr/bin/local/printpdfs
+	ln -s /opt/mergepdfs /usr/local/bin/mergepdfs
+	ln -s /opt/printpdfs /usr/local/bin/printpdfs
 
 ## mergepdfs
 `mergepdfs --help`
