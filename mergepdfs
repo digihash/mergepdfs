@@ -143,7 +143,7 @@ def makeEvenPdf(filename)
 		# Create empty file
 		t = execute *%W(#{PdfTK} #{filename} output - uncompress)
 		#t = t.force_encoding('BINARY').encode('UTF-8', :invalid => :replace, :undef => :replace)
-		t = t.force_encoding('BINARY')#.encode('UTF-8', :invalid => :replace, :undef => :replace)
+		t = t.force_encoding('BINARY') if t.respond_to?(:force_encoding) #.encode('UTF-8', :invalid => :replace, :undef => :replace)
 		t = t.match(/MediaBox\s+\[\d+\s+\d+\s+([\d\.]+)\s+([\d\.]+)\]/)
 		#t = t.each_line.grep(/CropBox/).first.chomp.match(/\[\d+\s+\d+\s+([\d\.]+)\s+([\d\.]+)\]/)
 		puts t
