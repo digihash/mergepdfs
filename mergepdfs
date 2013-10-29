@@ -1,0 +1,244 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+require 'open3.rb'
+require 'tempfile'
+PdfTK = `which pdftk`.chomp #'pdftk'
+if PdfTK == '' then puts 'Prerequisite pdftk missing'; exit end
+PdfInfo = `which pdfinfo`.chomp #'pdfinfo'
+if PdfTK == '' then puts 'Prerequisite pdfinfo missing'; exit end
+Name = File.basename(__FILE__)
+Version = '1.0'
+WrapLimit = [`tput cols`.to_i,60].min
+
+def merge(inputpdfs, outputpdf)
+	concatFilenames = Array.new # names of files to add to the output pdf
+	deleteFilenames = Array.new # names of files to remove after output pdf is generated (files with blank page added to them)
+	inputpdfs.first(inputpdfs.length - 1).each { |inputName|
+		evenName = makeEvenPdf(inputName)
+		if inputName != evenName then
+			puts "Added empty page to #{inputName}"
+			deleteFilenames << evenName 
+		end
+		concatFilenames << evenName
+	}
+	concatFilenames << inputpdfs.last
+	# Add cat and output because we cannot use splat as anything but the
+	# last argument in old versions of Ruby
+	concatFilenames << 'cat' << 'output' << outputpdf
+	execute(PdfTK,*concatFilenames)
+	puts 'Removing temporary files'
+	deleteFilenames.each { |f| File.delete f }
+end
+
+def getEmptyPdf(dim1,dim2)
+return " %PDF-1.4
+%µí®û
+3 0 obj
+<<
+/Length 0
+>>
+stream
+endstream
+endobj
+4 0 obj
+<<
+/ProcSet [/PDF ]
+/ExtGState <<
+/GS1 1 0 R
+>>
+>>
+endobj
+5 0 obj
+<<
+/Type /Halftone
+/HalftoneType 1
+/HalftoneName (Default)
+/Frequency 60
+/Angle 45
+/SpotFunction /Round
+>>
+endobj
+1 0 obj
+<<
+/Type /ExtGState
+/SA false
+/OP false
+/HT /Default
+>>
+endobj
+2 0 obj
+<<
+/Type /Page
+/Parent 7 0 R
+/Resources 4 0 R
+/Contents 3 0 R
+>>
+endobj
+7 0 obj
+<<
+/Type /Pages
+/Kids [2 0 R ]
+/Count 1
+/MediaBox [0 0 #{dim1} #{dim2}]
+>>
+endobj
+6 0 obj
+<<
+/Type /Catalog
+/Pages 7 0 R
+>>
+endobj
+8 0 obj
+<<
+/CreationDate (D:20110915222508)
+/Producer (libgnomeprint Ver: 2.12.1)
+>>
+endobj
+xref
+0 9
+0000000000 65535 f
+0000000278 00000 n
+0000000357 00000 n
+0000000017 00000 n
+0000000072 00000 n
+0000000146 00000 n
+0000000535 00000 n
+0000000445 00000 n
+0000000590 00000 n
+trailer
+<<
+/Size 9
+/Root 6 0 R
+/Info 8 0 R
+>>
+startxref
+688
+%%EOF"
+end
+
+def createEmptyPdf(dimensions, outputfilename) 
+	Tempfile.open('blank') { |tempfile|
+		# Created temporary blank PDF file
+		tempfile.write(getEmptyPdf(dimensions[0],dimensions[1]))
+		tempfile.close
+		# Binarizing temporary blank PDF file (not sure if this is required)
+		execute *%W(#{PdfTK} #{tempfile.path} output #{outputfilename})
+	}
+end
+
+def getNumberOfPages(filename)
+	t = execute(PdfTK, filename, 'dump_data')
+	# n = number of pages in #{filename}
+	n = t.each_line.grep(/NumberOfPages/).first[/(\d+)/]	
+	return n
+end
+
+# Return the filename of a pdf with an even number of pages
+# If #{filename} was a pdf with an even number of pages, returns the original file
+# Otherwise, create a new file by adding a white page to #{filename} and return its name
+def makeEvenPdf(filename)
+	if getNumberOfPages(filename).to_i.even?
+		return filename;
+	else
+		# Create empty file
+		t = execute(PdfInfo, '-box', filename).
+			each_line("\n").grep(/MediaBox/).
+			first.match(/\s+([\d\.]+)\s+([\d\.]+)\n/)
+		dimensions = [t[1], t[2]]
+		# Detected PDF dimensions: #{dimensions[0]}x#{dimensions[1]}"
+		tempfile = Tempfile.new('blankfile')
+		begin
+			createEmptyPdf(dimensions, tempfile.path)
+			# In new Ruby:
+			#newfilename = Dir::Tmpname.make_tmpname filename, nil
+			# Lame way of getting a name for a temporary file
+			t = Tempfile.new(filename);
+			newfilename = t.path
+			t.close; t.unlink;
+			execute *%W(#{PdfTK} A=#{filename} B=#{tempfile.path} cat A B output #{newfilename})
+			return newfilename
+		ensure
+			tempfile.unlink
+		end
+
+	end
+end
+
+def execute(*arguments)
+	# In new versions of Ruby we could do this
+	# stdout_str, status = Open3.capture2(*arguments)
+	Open3.popen3(*arguments) {|i,o,e|
+		out = o.read.chomp
+		return out;	
+	}
+	throw :moo
+	#stdout_str = stdin.read
+end
+
+
+
+
+def puts_wrapped(text)
+	words = text.split(/\s+/) # split on any whitespace character
+	counter = 0
+	words.each {|w|
+		if (counter + w.length <= WrapLimit)
+			print "#{w} "
+		else
+			print "\n#{w} "
+			counter = 0
+		end
+		counter = counter + w.length + 1
+	}
+	print "\n"
+end
+
+
+if ARGV.grep("--help").length > 0 then
+	print "#{Name} #{Version} by Jonathan Merlevede\n" <<
+	      "Usage:\t#{Name} output[.pdf]\n" <<
+	      "\t#{Name} input1[.pdf] input2[.pdf] ... output[.pdf]\n\n"
+	
+	puts_wrapped "#{Name} is a simple command line script for " <<
+		"merging PDF files. White pages are added so that each of the " <<
+		"PDF files that is merged starts on an uneven page. " <<
+		"The resulting output file can then be printed as a single file in " <<
+		"duplex mode."
+	puts ''
+	puts_wrapped 'When not specifying input files, the script ' <<
+		'processes all PDFs in the active directory.'
+	puts ''
+	puts "Dependencies: pdftk, pdfinfo"
+	exit
+end
+if ARGV.length < 1 then
+	puts "You need to specify an output file"
+	exit
+end
+output = ARGV.last.dup
+output << '.pdf' unless output.end_with?('.pdf')
+puts "Output file: #{output}"
+if File.exists?(output) then
+	print "File #{output} already exists; do you want to override it? (Y/n) "
+	answer = STDIN.gets.chomp
+	begin
+		if answer == 'y' || answer == '' then
+			File.delete output
+		elsif answer == 'n' then
+			exit
+		end
+	end until answer == '' || answer == 'y' || answer == 'n'
+end
+if ARGV.length == 1 then # do not put this before removing output, otherwise output can become part of array
+	puts "No input files specified; using all pdf files in current directory"
+	input = Dir.glob("*.pdf")
+else
+	input = Array.new
+	ARGV.first(ARGV.length - 1).each {|i|
+		input << i.dup;
+	}
+end
+input.map{|t| t << '.pdf' unless t.end_with?('.pdf')}
+
+puts "Input files: #{input.join(', ')}"
+merge(input, output)

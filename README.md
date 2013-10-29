@@ -1,4 +1,56 @@
-mergepdfs
-=========
+# mergepdfs
 
-Command line tool for merging and printing pdfs for duplex printing as a single job
+Simple command line tool for merging and printing pdfs for duplex printing as a single job.
+
+Note that I am aware of the fact that the code could be cleaner. It just works ☺.
+
+## Prerequisites
+Ruby 1.8.7 or newer, `pdftk`, `pdfinfo`
+
+## Installation
+In order to use this tool, simply put the files on your path.
+
+	sudo su
+	cd /opt
+	git clone https://github.com/jmerlevede/mergepdfs.git
+	ln -s /opt/mergepdfs /usr/bin/local/mergepdfs
+	ln -s /opt/printpdfs /usr/bin/local/printpdfs
+
+## mergepdfs
+`mergepdfs --help`
+
+	mergepdfs 1.0 by Jonathan Merlevede
+	Usage:	mergepdfs output[.pdf]
+		mergepdfs input1[.pdf] input2[.pdf] ... output[.pdf]
+
+	mergepdfs is a simple command line script for merging PDF 
+	files. White pages are added so that each of the PDF files 
+	that is merged starts on an uneven page. The resulting 
+	output file can then be printed as a single file in duplex 
+	mode. 
+
+	When not specifying input files, the script processes all 
+	PDFs in the active directory. 
+
+	Dependencies: pdftk, pdfinfo
+
+## printpdfs
+`printpdfs --help`
+
+	printpdfs 1.0 by Jonathan Merlevede
+	Usage:	printpdfs -p printer input1[.pdf] input2[.pdf] ... 
+		printpdfs input1[.pdf] input2[.pdf] ... 
+		printpdfs
+
+	printpdfs is a simple command line script for printing PDF 
+	files in duplex mode as a single print job, with each PDF 
+	file starting on its own page. 
+
+	Use the -p option to specify the name of a printer to send 
+	the print job to. It is not necessary to type out the name 
+	of the printer in full. 
+
+	When not specifying input files, the script processes all 
+	PDFs in the active directory. 
+
+	Dependencies: mergepdfs

@@ -1,0 +1,87 @@
+#!/usr/bin/env ruby
+require 'tempfile'
+Name = File.basename(__FILE__)
+Version = "1.0"
+MergePdfs = 'mergepdfs'
+WrapLimit = [`tput cols`.to_i,60].min
+
+def puts_wrapped(text)
+	words = text.split(/\s+/) # split on any whitespace character
+	counter = 0
+	words.each {|w|
+		if (counter + w.length <= WrapLimit)
+			print "#{w} "
+		else
+			print "\n#{w} "
+			counter = 0
+		end
+		counter = counter + w.length + 1
+	}
+	print "\n"
+end
+
+if ARGV.grep("--help").length > 0 then
+	print "#{Name} #{Version} by Jonathan Merlevede\n" <<
+	      "Usage:\t#{Name} -p printer input1[.pdf] input2[.pdf] ... \n" <<
+	      "\t#{Name} input1[.pdf] input2[.pdf] ... \n" <<
+	      "\t#{Name}\n\n"
+	
+	puts_wrapped "#{Name} is a simple command line script for " <<
+		"printing PDF files in duplex mode as a single print " <<
+		"job, with each PDF file starting on its own page."
+	puts ''
+	puts_wrapped 'Use the -p option to specify the name of a printer to send the print job to. ' <<
+		"It is not necessary to type out the name of the printer in full."
+	puts ''
+	puts_wrapped 'When not specifying input files, the script ' <<
+		'processes all PDFs in the active directory.'
+	puts ''
+	puts "Dependencies: mergepdfs"
+	exit
+end
+
+#printer = ARGV.join(' ')[/-p\s+([^\s]+)/,1]
+pi  = ARGV.index('-p')
+if pi.nil?
+	pstring = ''
+else
+	if pi + 1 >= ARGV.length
+		puts 'ERROR: -p detected but no printer specified'; exit
+	end
+	printer = ARGV[pi + 1]
+	printers = `lpstat -a`
+	printers = printers.each_line.collect{ |l| l.split.first }
+	printers = printers.grep(/#{printer}/)
+	n = printers.count
+	if n < 1
+		puts "ERROR: printer #{printer} is not installed on your system"; exit
+	elsif n > 1
+		puts "ERROR: #{printer} does not uniquely specify a printer (#{n} matches)"; exit
+	end
+	printer = printers.first
+	puts "Printing to printer #{printer}"
+	pstring = " -d #{printer}"
+end
+args = Array.new
+if !pi.nil?
+	args << ARGV[0..pi-1] unless pi == 0
+	args << ARGV[pi + 2..ARGV.length - 1] unless pi + 2 > ARGV.length - 1
+else
+	args << ARGV
+end
+
+# Lame way of obtaining a path for a temporary file
+t = Tempfile.new(['merged','.pdf'])
+tp = t.path; t.close; t.unlink
+#begin
+args << tp
+system "mergepdfs #{args.join(' ')}"
+begin
+	system "lp#{pstring} #{tp}"
+ensure
+	File.delete tp
+end
+#ensure
+	#puts tempfile.path
+	#tempfile.unlink
+#end
