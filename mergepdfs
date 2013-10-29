@@ -4,8 +4,8 @@ require 'open3.rb'
 require 'tempfile'
 PdfTK = `which pdftk`.chomp #'pdftk'
 if PdfTK == '' then puts 'Prerequisite pdftk missing'; exit end
-PdfInfo = `which pdfinfo`.chomp #'pdfinfo'
-if PdfTK == '' then puts 'Prerequisite pdfinfo missing'; exit end
+#PdfInfo = `which pdfinfo`.chomp #'pdfinfo'
+#if PdfTK == '' then puts 'Prerequisite pdfinfo missing'; exit end
 Name = File.basename(__FILE__)
 Version = '1.0'
 WrapLimit = [`tput cols`.to_i,60].min
@@ -141,9 +141,13 @@ def makeEvenPdf(filename)
 		return filename;
 	else
 		# Create empty file
-		t = execute(PdfInfo, '-box', filename).
-			each_line("\n").grep(/MediaBox/).
-			first.match(/\s+([\d\.]+)\s+([\d\.]+)\n/)
+		t = execute *%W(#{PdfInfo} #{filename} output - uncompress)
+		t = t.force_encoding('BINARY').encode('UTF-8', :invalid => :replace, :undef => :replace)
+		#t = t.each_line.grep(/MediaBox/).last.chomp.match(/\[\d+\s+\d+\s+([\d\.]+)\s+([\d\.]+)\]/)
+		t = t.each_line.grep(/CropBox/).first.chomp.match(/\[\d+\s+\d+\s+([\d\.]+)\s+([\d\.]+)\]/)
+		#t = execute(PdfInfo, '-box', filename).
+		#	each_line("\n").grep(/MediaBox/).
+		#	first.match(/\s+([\d\.]+)\s+([\d\.]+)\n/)
 		dimensions = [t[1], t[2]]
 		# Detected PDF dimensions: #{dimensions[0]}x#{dimensions[1]}"
 		tempfile = Tempfile.new('blankfile')
@@ -208,7 +212,7 @@ if ARGV.grep("--help").length > 0 then
 	puts_wrapped 'When not specifying input files, the script ' <<
 		'processes all PDFs in the active directory.'
 	puts ''
-	puts "Dependencies: pdftk, pdfinfo"
+	puts "Dependencies: pdftk"
 	exit
 end
 if ARGV.length < 1 then
