@@ -36,7 +36,7 @@ if ARGV.grep("--help").length > 0 then
 	puts_wrapped 'When not specifying input files, the script ' <<
 		'processes all PDFs in the active directory.'
 	puts ''
-	puts "Dependencies: mergepdfs"
+	puts "Dependencies: mergepdfs, lpstat, lp"
 	exit
 end
 

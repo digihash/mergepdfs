@@ -53,4 +53,4 @@ In order to use this tool, simply put the files on your path.
 	When not specifying input files, the script processes all 
 	PDFs in the active directory. 
 
-	Dependencies: mergepdfs
+	Dependencies: mergepdfs, lpstat, lp
