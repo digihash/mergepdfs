@@ -3,6 +3,7 @@
 Simple command line tool for merging and printing pdfs for duplex printing as a single job.
 
 Note that I am aware of the fact that the code could be cleaner. It just works ☺.
+The code for generating a blank PDF is based on [a post by Dingo on stackoverflow](http://stackoverflow.com/questions/9820830/how-to-merge-pdf-filesor-ps-if-not-possible-such-that-every-file-will-begin-in/9827598#9827598).
 
 ## Prerequisites
 Ruby 1.8.7 or newer, `pdftk`, `pdfinfo`
