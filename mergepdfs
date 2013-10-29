@@ -141,10 +141,12 @@ def makeEvenPdf(filename)
 		return filename;
 	else
 		# Create empty file
-		t = execute *%W(#{PdfInfo} #{filename} output - uncompress)
-		t = t.force_encoding('BINARY').encode('UTF-8', :invalid => :replace, :undef => :replace)
-		#t = t.each_line.grep(/MediaBox/).last.chomp.match(/\[\d+\s+\d+\s+([\d\.]+)\s+([\d\.]+)\]/)
-		t = t.each_line.grep(/CropBox/).first.chomp.match(/\[\d+\s+\d+\s+([\d\.]+)\s+([\d\.]+)\]/)
+		t = execute *%W(#{PdfTK} #{filename} output - uncompress)
+		#t = t.force_encoding('BINARY').encode('UTF-8', :invalid => :replace, :undef => :replace)
+		t = t.force_encoding('BINARY')#.encode('UTF-8', :invalid => :replace, :undef => :replace)
+		t = t.match(/MediaBox\s+\[\d+\s+\d+\s+([\d\.]+)\s+([\d\.]+)\]/)
+		#t = t.each_line.grep(/CropBox/).first.chomp.match(/\[\d+\s+\d+\s+([\d\.]+)\s+([\d\.]+)\]/)
+		puts t
 		#t = execute(PdfInfo, '-box', filename).
 		#	each_line("\n").grep(/MediaBox/).
 		#	first.match(/\s+([\d\.]+)\s+([\d\.]+)\n/)
