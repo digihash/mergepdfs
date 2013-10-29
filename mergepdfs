@@ -141,16 +141,17 @@ def makeEvenPdf(filename)
 		return filename;
 	else
 		# Create empty file
-		t = execute *%W(#{PdfTK} #{filename} output - uncompress)
-		#t = t.force_encoding('BINARY').encode('UTF-8', :invalid => :replace, :undef => :replace)
-		t = t.force_encoding('BINARY') if t.respond_to?(:force_encoding) #.encode('UTF-8', :invalid => :replace, :undef => :replace)
-		t = t.match(/MediaBox\s+\[\d+\s+\d+\s+([\d\.]+)\s+([\d\.]+)\]/)
-		#t = t.each_line.grep(/CropBox/).first.chomp.match(/\[\d+\s+\d+\s+([\d\.]+)\s+([\d\.]+)\]/)
-		puts t
-		#t = execute(PdfInfo, '-box', filename).
-		#	each_line("\n").grep(/MediaBox/).
-		#	first.match(/\s+([\d\.]+)\s+([\d\.]+)\n/)
-		dimensions = [t[1], t[2]]
+		if `which pdfinfo`.empty?
+			t = execute *%W(#{PdfTK} #{filename} output - uncompress)
+			t = t.force_encoding('BINARY') if t.respond_to?(:force_encoding) # force encoding for ruby 1.9 and higher
+			t2 = t.match(/CropBox\s+\[\d+\s+\d+\s+([\d\.]+)\s+([\d\.]+)\]/)
+			t2 = t.match(/MediaBox\s+\[\d+\s+\d+\s+([\d\.]+)\s+([\d\.]+)\]/) if t2.nil?
+		else
+			t2 = execute('pdfinfo', '-box', filename).
+				each_line("\n").grep(/CropBox/).
+				first.match(/\s+([\d\.]+)\s+([\d\.]+)\n/)
+		end
+		dimensions = [t2[1], t2[2]]
 		# Detected PDF dimensions: #{dimensions[0]}x#{dimensions[1]}"
 		tempfile = Tempfile.new('blankfile')
 		begin

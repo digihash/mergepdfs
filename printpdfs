@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 require 'tempfile'
+require 'open3'
 Name = File.basename(__FILE__)
 Version = "1.0"
 MergePdfs = 'mergepdfs'
@@ -18,6 +19,13 @@ def puts_wrapped(text)
 		counter = counter + w.length + 1
 	}
 	print "\n"
+end
+def execute(*arguments) # see mergepdfs
+	Open3.popen3(*arguments) {|i,o,e|
+		out = o.read.chomp
+		return out;	
+	}
+	throw :moo
 end
 
 if ARGV.grep("--help").length > 0 then
@@ -64,10 +72,10 @@ else
 end
 args = Array.new
 if !pi.nil?
-	args << ARGV[0..pi-1] unless pi == 0
-	args << ARGV[pi + 2..ARGV.length - 1] unless pi + 2 > ARGV.length - 1
+	args.concat ARGV[0..pi-1] unless pi == 0
+	args.concat ARGV[pi + 2..ARGV.length - 1] unless pi + 2 > ARGV.length - 1
 else
-	args << ARGV
+	args.concat ARGV
 end
 
 # Lame way of obtaining a path for a temporary file
@@ -75,7 +83,8 @@ t = Tempfile.new(['merged','.pdf'])
 tp = t.path; t.close; t.unlink
 #begin
 args << tp
-system "mergepdfs #{args.join(' ')}"
+puts "args: #{args}"
+execute('mergepdfs',*args)
 begin
 	system "lp#{pstring} #{tp}"
 ensure
