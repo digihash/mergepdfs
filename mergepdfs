@@ -14,12 +14,7 @@ def merge(inputpdfs, outputpdf)
 	concatFilenames = Array.new # names of files to add to the output pdf
 	deleteFilenames = Array.new # names of files to remove after output pdf is generated (files with blank page added to them)
 	inputpdfs.first(inputpdfs.length - 1).each { |inputName|
-		evenName = makeEvenPdf(inputName)
-		if inputName != evenName then
-			puts "Added empty page to #{inputName}"
-			deleteFilenames << evenName 
-		end
-		concatFilenames << evenName
+		concatFilenames << inputName
 	}
 	concatFilenames << inputpdfs.last
 	# Add cat and output because we cannot use splat as anything but the
@@ -27,7 +22,6 @@ def merge(inputpdfs, outputpdf)
 	concatFilenames << 'cat' << 'output' << outputpdf
 	execute(PdfTK,*concatFilenames)
 	puts 'Removing temporary files'
-	deleteFilenames.each { |f| File.delete f }
 end
 
 def getEmptyPdf(dim1,dim2)
@@ -116,69 +110,9 @@ startxref
 %%EOF"
 end
 
-def createEmptyPdf(dimensions, outputfilename) 
-	Tempfile.open('blank') { |tempfile|
-		# Created temporary blank PDF file
-		tempfile.write(getEmptyPdf(dimensions[0],dimensions[1]))
-		tempfile.close
-		# Binarizing temporary blank PDF file (not sure if this is required)
-		execute *%W(#{PdfTK} #{tempfile.path} output #{outputfilename})
-	}
-end
-
-def getNumberOfPages(filename)
-	t = execute(PdfTK, filename, 'dump_data')
-	# n = number of pages in #{filename}
-	n = t.each_line.grep(/NumberOfPages/).first[/(\d+)/]	
-	return n
-end
-
-# Return the filename of a pdf with an even number of pages
-# If #{filename} was a pdf with an even number of pages, returns the original file
-# Otherwise, create a new file by adding a white page to #{filename} and return its name
-def makeEvenPdf(filename)
-	if getNumberOfPages(filename).to_i.even?
-		return filename;
-	else
-		# Create empty file
-		if `which pdfinfo`.empty?
-			t = execute *%W(#{PdfTK} #{filename} output - uncompress)
-			t = t.force_encoding('BINARY') if t.respond_to?(:force_encoding) # force encoding for ruby 1.9 and higher
-			t2 = t.match(/CropBox\s+\[\d+\s+\d+\s+([\d\.]+)\s+([\d\.]+)\]/)
-			t2 = t.match(/MediaBox\s+\[\d+\s+\d+\s+([\d\.]+)\s+([\d\.]+)\]/) if t2.nil?
-		else
-			t2 = execute('pdfinfo', '-box', filename).
-				each_line("\n").grep(/CropBox/).
-				first.match(/\s+([\d\.]+)\s+([\d\.]+)\n/)
-		end
-		dimensions = [t2[1], t2[2]]
-		# Detected PDF dimensions: #{dimensions[0]}x#{dimensions[1]}"
-		tempfile = Tempfile.new('blankfile')
-		begin
-			createEmptyPdf(dimensions, tempfile.path)
-			# In new Ruby:
-			#newfilename = Dir::Tmpname.make_tmpname filename, nil
-			# Lame way of getting a name for a temporary file
-			t = Tempfile.new(filename);
-			newfilename = t.path
-			t.close; t.unlink;
-			execute *%W(#{PdfTK} A=#{filename} B=#{tempfile.path} cat A B output #{newfilename})
-			return newfilename
-		ensure
-			tempfile.unlink
-		end
-
-	end
-end
-
 def execute(*arguments)
 	# In new versions of Ruby we could do this
-	# stdout_str, status = Open3.capture2(*arguments)
-	Open3.popen3(*arguments) {|i,o,e|
-		out = o.read.chomp
-		return out;	
-	}
-	throw :moo
+	stdout_str, status = Open3.capture2(*arguments)
 	#stdout_str = stdin.read
 end
 
@@ -205,7 +139,7 @@ if ARGV.grep("--help").length > 0 then
 	print "#{Name} #{Version} by Jonathan Merlevede\n" <<
 	      "Usage:\t#{Name} output[.pdf]\n" <<
 	      "\t#{Name} input1[.pdf] input2[.pdf] ... output[.pdf]\n\n"
-	
+
 	puts_wrapped "#{Name} is a simple command line script for " <<
 		"merging PDF files. White pages are added so that each of the " <<
 		"PDF files that is merged starts on an uneven page. " <<
